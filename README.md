@@ -1,2 +1,2 @@
-# STM32MP157-smart
+# STM32MP157-RT-Smart
 STM32MP157DAA1 for RT-Smart
