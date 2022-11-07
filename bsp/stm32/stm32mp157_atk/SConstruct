@@ -1,0 +1,108 @@
+# import os
+# import sys
+# import rtconfig
+# import re
+
+# if os.getenv('RTT_ROOT'):
+#     RTT_ROOT = os.getenv('RTT_ROOT')
+# else:
+#     RTT_ROOT = os.path.join(os.getcwd() + '/../../..')
+
+# sys.path = sys.path + [os.path.join(RTT_ROOT, 'tools')]
+# try:
+#     from building import *
+# except:
+#     print('Cannot found RT-Thread root directory, please check RTT_ROOT')
+#     print(RTT_ROOT)
+#     exit(-1)
+
+# TARGET = 'rtthread.' + rtconfig.TARGET_EXT
+# TRACE_CONFIG = ""
+
+# content = ""
+# with open("rtconfig.h") as f:
+#     for line in f.readlines():
+#         if line.find("RT_BACKTRACE_FUNCTION_NAME") != -1:
+#             for token in line.split(" "):
+#                 if re.match(r'RT_BACKTRACE_FUNCTION_NAME$', token, flags=0):
+#                     TRACE_CONFIG = " -mpoke-function-name"
+
+# DefaultEnvironment(tools=[])
+# env = Environment(tools=['mingw'],
+#                   AS=rtconfig.AS, ASFLAGS=rtconfig.AFLAGS + TRACE_CONFIG,
+#                   CC=rtconfig.CC, CFLAGS=rtconfig.CFLAGS + TRACE_CONFIG,
+#                   CXX=rtconfig.CXX, CXXFLAGS=rtconfig.CXXFLAGS + TRACE_CONFIG,
+#                   AR=rtconfig.AR, ARFLAGS='-rc',
+#                   LINK=rtconfig.LINK, LINKFLAGS=rtconfig.LFLAGS)
+# env.PrependENVPath('PATH', rtconfig.EXEC_PATH)
+# env['ASCOM'] = env['ASPPCOM']
+# env['LINKCOM'] = '$LINK -o $TARGET $LINKFLAGS $__RPATH $SOURCES $_LIBDIRFLAGS -Wl,--start-group $_LIBFLAGS -Wl,--end-group'
+
+# Export('RTT_ROOT')
+# Export('rtconfig')
+
+# # prepare building environment
+# objs = PrepareBuilding(env, RTT_ROOT)
+
+# # make a building
+# DoBuilding(TARGET, objs)
+import os
+import sys
+import rtconfig
+
+if os.getenv('RTT_ROOT'):
+    RTT_ROOT = os.getenv('RTT_ROOT')
+else:
+    RTT_ROOT = os.path.normpath(os.getcwd() + '/../../..')
+
+sys.path = sys.path + [os.path.join(RTT_ROOT, 'tools')]
+try:
+    from building import *
+except:
+    print('Cannot found RT-Thread root directory, please check RTT_ROOT')
+    print(RTT_ROOT)
+    exit(-1)
+
+TARGET = 'rt-thread.' + rtconfig.TARGET_EXT
+
+DefaultEnvironment(tools=[])
+env = Environment(tools = ['mingw'],
+    AS = rtconfig.AS, ASFLAGS = rtconfig.AFLAGS,
+    CC = rtconfig.CC, CFLAGS = rtconfig.CFLAGS,
+    AR = rtconfig.AR, ARFLAGS = '-rc',
+    CXX = rtconfig.CXX, CXXFLAGS = rtconfig.CXXFLAGS,
+    LINK = rtconfig.LINK, LINKFLAGS = rtconfig.LFLAGS)
+env.PrependENVPath('PATH', rtconfig.EXEC_PATH)
+
+if rtconfig.PLATFORM == 'iar':
+    env.Replace(CCCOM = ['$CC $CFLAGS $CPPFLAGS $_CPPDEFFLAGS $_CPPINCFLAGS -o $TARGET $SOURCES'])
+    env.Replace(ARFLAGS = [''])
+    env.Replace(LINKCOM = env["LINKCOM"] + ' --map rt-thread.map')
+
+Export('RTT_ROOT')
+Export('rtconfig')
+
+SDK_ROOT = os.path.abspath('./')
+
+if os.path.exists(SDK_ROOT + '/libraries'):
+    libraries_path_prefix = SDK_ROOT + '/libraries'
+else:
+    libraries_path_prefix = os.path.dirname(SDK_ROOT) + '/libraries'
+
+SDK_LIB = libraries_path_prefix
+Export('SDK_LIB')
+
+# prepare building environment
+objs = PrepareBuilding(env, RTT_ROOT, has_libcpu=False)
+
+stm32_library = 'STM32MPxx_HAL'
+rtconfig.BSP_LIBRARY_TYPE = stm32_library
+
+# include libraries
+objs.extend(SConscript(os.path.join(libraries_path_prefix, stm32_library, 'SConscript')))
+
+# include drivers
+objs.extend(SConscript(os.path.join(libraries_path_prefix, 'HAL_Drivers', 'SConscript')))
+
+# make a building
+DoBuilding(TARGET, objs)
