@@ -17,9 +17,7 @@
 
 #include <rtconfig.h>
 #include <realview.h>
-#include "vexpress_a9.h"
-#include "stm32mp1xx.h"
-#include "stm32mp1xx_hal.h"
+#include "stm32mp157.h"
 
 #include "mmu.h"
 #include "ioremap.h"
@@ -36,9 +34,9 @@ extern int __bss_end;
 #endif
 
 #ifdef RT_USING_USERSPACE
-#define HEAP_END        (void*)(KERNEL_VADDR_START + 16 * 1024 * 1024)
+#define HEAP_END        (void*)(KERNEL_VADDR_START + 16 * 1024 * 1024) // 0xc1000000
 #define PAGE_START      HEAP_END
-#define PAGE_END        (void*)(KERNEL_VADDR_START + 128 * 1024 * 1024)
+#define PAGE_END        (void*)(KERNEL_VADDR_START + 128 * 1024 * 1024) // 0xc8000000
 #else
 #define HEAP_END        (void*)(0x60000000 + 64 * 1024 * 1024)
 #endif
