@@ -91,21 +91,20 @@ void rt_hw_board_init(void)
     rt_system_heap_init(HEAP_BEGIN, HEAP_END);
 
     /* RCC VER BASE ADDR */
-    rcc_addr = (RCC_TypeDef *)rt_ioremap((void *)RCC, sizeof(sizeof(rt_uint32_t)));
+    rcc_addr = (RCC_TypeDef *)rt_ioremap((void *)RCC, 0x1000);
 
-    // gic_addr = (GICDistributor_Type *)rt_ioremap((void *)GIC_DISTRIBUTOR_BASE, sizeof(sizeof(rt_uint32_t)));
+    exti_c1_addr = (EXTI_Core_TypeDef *)rt_ioremap((void *)EXTI_C1, 0x400);
 
-    exti_c1_addr = (EXTI_Core_TypeDef *)rt_ioremap((void *)EXTI_C1, sizeof(sizeof(rt_uint32_t)));
-
-    exti_addr = (EXTI_TypeDef *)rt_ioremap((void *)EXTI, sizeof(sizeof(rt_uint32_t)));
+    exti_addr = (EXTI_TypeDef *)rt_ioremap((void *)EXTI, 0x400);
 
     /* USART driver initialization is open by default */
-#ifdef RT_USING_SERIAL
-    rt_hw_usart_init();
-#endif
 
 #ifdef RT_USING_PIN
     rt_hw_pin_init();
+#endif
+
+#ifdef RT_USING_SERIAL
+    rt_hw_usart_init();
 #endif
 
     rt_components_board_init();
